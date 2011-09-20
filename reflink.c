@@ -8,8 +8,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-static inline int
-btrfs_reflink (const char *src_path, const char *dest_path)
+int btrfs_reflink (const char *src_path, const char *dest_path)
 {
   int src_fd;
   src_fd = open(src_path, O_RDONLY);
@@ -31,8 +30,7 @@ btrfs_reflink (const char *src_path, const char *dest_path)
   return r;
 }
 
-static inline int
-ocfs2_reflink (const char *src_path, const char *dest_path)
+int ocfs2_reflink (const char *src_path, const char *dest_path)
 {
   struct args {
     uint64_t src_path;
@@ -42,7 +40,8 @@ ocfs2_reflink (const char *src_path, const char *dest_path)
     (uint64_t) src_path, (uint64_t) dest_path, 1
   };
   int fd = open(src_path, O_RDONLY);
-  if (fd < 0) return -1;
+  if (fd < 0)
+    return -1;
   int r = ioctl(fd, _IOW(0x6f, 4, struct args), &args);
   if (r < 0)
     close(fd);
@@ -51,7 +50,8 @@ ocfs2_reflink (const char *src_path, const char *dest_path)
 
 int main (int argc, char **argv)
 {
-	if (argc != 3) errx(1, "Usage: %s SRC DST", argv[0]);
+	if (argc != 3)
+	  errx(1, "Usage: %s SRC DST", argv[0]);
 	if (!btrfs_reflink(argv[1], argv[2]))
 	  return 0;
 	if (!ocfs2_reflink(argv[1], argv[2]))
