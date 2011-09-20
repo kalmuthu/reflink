@@ -61,9 +61,9 @@ int main (int argc, char **argv)
 {
 	if (argc != 3)
 	  errx(1, "Usage: %s SRC DST", argv[0]);
-	if (!btrfs_reflink(argv[1], argv[2]))
-	  return 0;
 	if (!ocfs2_reflink(argv[1], argv[2]))
+	  return 0;
+	if (!btrfs_reflink(argv[1], argv[2]))
 	  return 0;
 	int tmp_errno = errno;
 	errno = 0;
