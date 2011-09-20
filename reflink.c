@@ -11,20 +11,24 @@
 static inline int
 btrfs_reflink (const char *src_path, const char *dest_path)
 {
-  int src_fd, dest_fd;
+  int src_fd;
   src_fd = open(src_path, O_RDONLY);
   if (src_fd < 0)
     err(1, "%s", src_path);
   struct stat buf;
   if (fstat(src_fd, &buf) < 0)
     err(1, "%s", src_path);
-  dest_fd = open(dest_path, O_WRONLY | O_CREAT | O_EXCL, buf.st_mode);
+  int dest_fd = open(dest_path, O_WRONLY | O_CREAT | O_EXCL, buf.st_mode);
   if (dest_fd < 0) {
     if (errno == EEXIST)
       err(1, "%s", dest_path);
+    close(src_fd);
     return -1;
   }
-  return ioctl(dest_fd, _IOW(0x94, 9, int), src_fd);
+  int r = ioctl(dest_fd, _IOW(0x94, 9, int), src_fd);
+  if (r < 0)
+    close(src_fd), close(dest_fd), unlink(dest_path);
+  return r;
 }
 
 static inline int
@@ -39,7 +43,10 @@ ocfs2_reflink (const char *src_path, const char *dest_path)
   };
   int fd = open(src_path, O_RDONLY);
   if (fd < 0) return -1;
-  return ioctl(fd, _IOW(0x6f, 4, struct args), &args);
+  int r = ioctl(fd, _IOW(0x6f, 4, struct args), &args);
+  if (r < 0)
+    close(fd);
+  return r;
 }
 
 int main (int argc, char **argv)
